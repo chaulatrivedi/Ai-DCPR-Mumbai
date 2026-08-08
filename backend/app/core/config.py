@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_v1_prefix: str = "/api/v1"
     cors_origins: list[str] = ["http://localhost:3000"]
+    database_url: str
 
 
 settings = Settings()
