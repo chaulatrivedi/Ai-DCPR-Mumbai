@@ -9,7 +9,7 @@ Each task should be picked one at a time and run through the Daily Workflow desc
 ## Milestone 0 — Setup
 
 - [x] Task 0.1 — Initialize GitHub repository with folder structure
-- [ ] Task 0.2 — Setup Next.js (TypeScript, Tailwind, ESLint, App Router)
+- [x] Task 0.2 — Setup Next.js (TypeScript, Tailwind, ESLint, App Router)
 - [ ] Task 0.3 — Setup shadcn/ui
 - [ ] Task 0.4 — Setup FastAPI (auth middleware, logging, config management, API versioning)
 - [ ] Task 0.5 — Setup PostgreSQL (Docker, Postgres, pgvector, migrations via Supabase)
