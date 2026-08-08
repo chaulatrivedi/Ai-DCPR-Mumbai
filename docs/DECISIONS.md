@@ -32,6 +32,7 @@ A running log of architectural and technical decisions for the AI-DCR (Mumbai DC
 | Vercel | Frontend hosting, free tier to start | — | 2026-08-06 |
 | Railway | Backend hosting — minimal setup (points at GitHub repo, auto-detects FastAPI), lets solo dev's attention stay on the AI/PDF pipeline rather than infra config | Fly.io (more powerful but more infra-config overhead; multi-region/scale-to-zero benefits not needed at current scale) | 2026-08-06 |
 | Claude API | AI search, explanation, tagging — already have Anthropic access | — | 2026-08-06 |
+| No local Docker Postgres | Task 0.5's title mentioned Docker, but it was superseded by using the hosted Supabase project directly (already provisioned with pgvector enabled) — connecting straight to it avoids running/maintaining a separate local Postgres container that would need to be kept in sync | Local Docker Postgres for development, synced to Supabase later | 2026-08-09 |
 
 ## Deferred decisions (not yet finalized)
 
