@@ -18,12 +18,12 @@ Each task should be picked one at a time and run through the Daily Workflow desc
 
 ## Milestone 1 — Authentication
 
-- [ ] Login
-- [ ] Signup
-- [ ] Forgot Password
-- [ ] Session Management
-- [ ] Protected Routes
-- [ ] User Roles
+- [x] Login
+- [x] Signup
+- [x] Forgot Password
+- [x] Session Management
+- [x] Protected Routes
+- [ ] User Roles *(deferred — see DECISIONS.md "Scope decisions")*
 
 **Do not add any AI yet.**
 
