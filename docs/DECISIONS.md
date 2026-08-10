@@ -34,6 +34,12 @@ A running log of architectural and technical decisions for the AI-DCR (Mumbai DC
 | Claude API | AI search, explanation, tagging — already have Anthropic access | — | 2026-08-06 |
 | No local Docker Postgres | Task 0.5's title mentioned Docker, but it was superseded by using the hosted Supabase project directly (already provisioned with pgvector enabled) — connecting straight to it avoids running/maintaining a separate local Postgres container that would need to be kept in sync | Local Docker Postgres for development, synced to Supabase later | 2026-08-09 |
 
+## SMTP/email
+
+| Decision | Reason | Date |
+|---|---|---|
+| SMTP provider (dev/testing): Gmail SMTP | Switched from Mailgun sandbox to Gmail SMTP (via App Password) for local development, after Mailgun sandbox's 5-recipient authorization limit made testing with multiple independent accounts impractical. Supabase flags Gmail SMTP as unsuited for transactional email at scale (deliverability warning) — acceptable for solo dev testing only. **Follow-up required:** Must switch to a production-grade transactional provider with a verified custom domain (e.g. Mailgun, SendGrid, Postmark, Resend) before onboarding any real user beyond solo dev testing. | 2026-08-10 |
+
 ## Deferred decisions (not yet finalized)
 
 | Item | Status | To be confirmed by | Notes |

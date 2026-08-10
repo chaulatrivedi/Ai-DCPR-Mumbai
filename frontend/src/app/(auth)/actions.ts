@@ -43,8 +43,14 @@ export async function signUp(
     return { error: error.message };
   }
 
+  // Supabase returns a fake success (no error) for an email that's already
+  // registered and confirmed, as an anti-enumeration measure - identical
+  // response shape to a genuine new signup, just with no email actually
+  // sent. We can't distinguish the two cases in the UI without leaking
+  // account existence, so the copy below is written to stay true in both.
   return {
-    success: "Check your email to confirm your account before signing in.",
+    success:
+      "If this email isn't already registered, you'll receive a confirmation link shortly. Already have an account? Try logging in instead.",
   };
 }
 
