@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getProject } from "@/lib/projects";
 import { ActionToast } from "./action-toast";
+import { DeleteProjectButton } from "./delete-project-button";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -35,9 +36,12 @@ export default async function ProjectPage({
             {project.occupancy_type}
           </p>
         </div>
-        <Link href={`/dashboard/projects/${project.id}/edit`}>
-          <Button variant="brief-secondary">Edit</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/dashboard/projects/${project.id}/edit`}>
+            <Button variant="brief-secondary">Edit</Button>
+          </Link>
+          <DeleteProjectButton projectId={project.id} />
+        </div>
       </div>
 
       <Card className="grid max-w-xl grid-cols-2 gap-4">

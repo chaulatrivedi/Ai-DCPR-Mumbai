@@ -106,3 +106,29 @@ export async function updateProject(
 
   redirect(`/dashboard/projects/${id}?updated=true`);
 }
+
+// Standing decision (TASKS-M2-M3-loop-goal.md): delete is soft — sets
+// deleted_at rather than removing the row. Recoverable from Trash for a
+// 30-day window (automatic purge after that is out of scope for M3 — see
+// SESSION_LOG.md).
+export async function softDeleteProject(id: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("projects")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("deleted_at", null);
+
+  redirect(`/dashboard/projects?deleted=true`);
+}
+
+export async function restoreProject(id: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("projects")
+    .update({ deleted_at: null })
+    .eq("id", id)
+    .not("deleted_at", "is", null);
+
+  redirect(`/dashboard/projects/${id}?restored=true`);
+}
