@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NotificationsMenu } from "./notifications-menu";
+
 // DESIGN_BRIEF.md §5 — Navigation bar (build now, reduced link set per the
 // scope note in §4: only Home/Projects exist yet — Calculators/Regs/Ask AI
 // land with their own milestones).
@@ -45,6 +47,7 @@ export function NavBar() {
           })}
         </nav>
       </div>
+      <NotificationsMenu />
     </header>
   );
 }
