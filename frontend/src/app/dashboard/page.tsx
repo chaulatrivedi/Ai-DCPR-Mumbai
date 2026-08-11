@@ -1,5 +1,6 @@
 import { listProjects } from "@/lib/projects";
 import { ProjectsWidget } from "./projects-widget";
+import { RecentCalculationsWidget, RecentChatsWidget } from "./recent-activity-widgets";
 
 export default async function DashboardHomePage() {
   const projects = await listProjects();
@@ -14,6 +15,8 @@ export default async function DashboardHomePage() {
       </div>
 
       <ProjectsWidget projects={projects} />
+      <RecentChatsWidget />
+      <RecentCalculationsWidget />
     </div>
   );
 }
