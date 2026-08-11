@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 
-import { createProject } from "../actions";
-import { ProjectFormFields } from "../project-form-fields";
+import { updateProject } from "../../actions";
+import { ProjectFormFields } from "../../project-form-fields";
+import type { Project } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,22 +14,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function NewProjectForm() {
-  const [state, formAction, pending] = useActionState(createProject, undefined);
+export function EditProjectForm({ project }: { project: Project }) {
+  const [state, formAction, pending] = useActionState(
+    updateProject.bind(null, project.id),
+    undefined,
+  );
 
   return (
     <Card className="max-w-xl">
       <CardHeader>
-        <CardTitle>New Project</CardTitle>
+        <CardTitle>Edit Project</CardTitle>
       </CardHeader>
       <form action={formAction}>
         <CardContent className="flex flex-col gap-4">
-          <ProjectFormFields />
+          <ProjectFormFields defaultValues={project} />
           {state?.error && <p className="text-sm text-error">{state.error}</p>}
         </CardContent>
         <CardFooter className="justify-end">
           <Button type="submit" variant="brief-primary" disabled={pending}>
-            {pending ? "Creating..." : "Create Project"}
+            {pending ? "Saving..." : "Save changes"}
           </Button>
         </CardFooter>
       </form>

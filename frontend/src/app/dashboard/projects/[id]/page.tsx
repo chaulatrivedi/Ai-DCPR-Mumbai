@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getProject } from "@/lib/projects";
-import { CreatedToast } from "./created-toast";
+import { ActionToast } from "./action-toast";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -25,12 +27,17 @@ export default async function ProjectPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <CreatedToast />
-      <div>
-        <h1 className="text-page-heading font-semibold text-ink">{project.name}</h1>
-        <p className="text-page-subheading text-muted-foreground">
-          {project.occupancy_type}
-        </p>
+      <ActionToast />
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-page-heading font-semibold text-ink">{project.name}</h1>
+          <p className="text-page-subheading text-muted-foreground">
+            {project.occupancy_type}
+          </p>
+        </div>
+        <Link href={`/dashboard/projects/${project.id}/edit`}>
+          <Button variant="brief-secondary">Edit</Button>
+        </Link>
       </div>
 
       <Card className="grid max-w-xl grid-cols-2 gap-4">

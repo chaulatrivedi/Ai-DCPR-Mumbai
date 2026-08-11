@@ -14,12 +14,18 @@
       "Bash(venv/Scripts/python -m pytest:*)",
       "Bash(npx vitest:*)",
       "Bash(npm test:*)",
+      "Bash(npm install:*)",
       "Bash(alembic:*)",
+      "Bash(venv/Scripts/python -m alembic:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git status)",
+      "Bash(git status:*)",
       "Bash(git diff:*)",
-      "Bash(git checkout -b:*)"
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)"
     ],
     "ask": [
       "Bash(git push:*)",

@@ -72,3 +72,37 @@ export async function createProject(
 
   redirect(`/dashboard/projects/${data.id}?created=true`);
 }
+
+export async function updateProject(
+  id: string,
+  _prevState: ProjectActionState,
+  formData: FormData,
+): Promise<ProjectActionState> {
+  const required = parseRequiredFields(formData);
+  if ("error" in required) return required;
+
+  const optional = parseOptionalFields(formData);
+  if ("error" in optional) return optional;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .update({
+      name: required.name,
+      occupancy_type: required.occupancyType,
+      plot_area: required.plotArea,
+      road_width: optional.roadWidth,
+      zoning: optional.zoning,
+    })
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+  // RLS silently filters out rows you don't own rather than erroring, so a
+  // successful-but-empty response means "not yours" or "doesn't exist".
+  if (!data) return { error: "Project not found." };
+
+  redirect(`/dashboard/projects/${id}?updated=true`);
+}
