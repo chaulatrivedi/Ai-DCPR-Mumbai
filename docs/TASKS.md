@@ -29,28 +29,30 @@ Each task should be picked one at a time and run through the Daily Workflow desc
 
 **Do not add any AI yet.**
 
-## Milestone 2 — Dashboard
+## Milestone 2 — Dashboard — Complete (2026-08-11)
 
-- [ ] Home Page
-- [ ] Sidebar
-- [ ] Projects
-- [ ] Recent Chats
-- [ ] Recent Calculations
-- [ ] Notifications
-- [ ] Settings
-- [ ] Profile
-- [ ] Dark Mode
+- [x] Home Page
+- [x] Sidebar
+- [x] Projects
+- [x] Recent Chats
+- [x] Recent Calculations
+- [x] Notifications
+- [x] Settings
+- [x] Profile
+- [x] Dark Mode
 
-**Just UI — nothing complicated.**
+**Just UI — nothing complicated.** Built on `feature/m2-m3-dashboard-projects` (not merged to main). See SESSION_LOG.md for the full session summary, assumptions, and flagged items.
 
-## Milestone 3 — Project Management
+## Milestone 3 — Project Management — Complete (2026-08-11)
 
-- [ ] 3.1 — Create Project
-- [ ] 3.2 — Edit Project
-- [ ] 3.3 — Delete Project
-- [ ] 3.4 — Project Dashboard
-- [ ] 3.5 — Project Timeline
-- [ ] 3.6 — Incremental Inputs (support gradual data entry, not all-at-once)
+- [x] 3.1 — Create Project
+- [x] 3.2 — Edit Project
+- [x] 3.3 — Delete Project
+- [x] 3.4 — Project Dashboard
+- [x] 3.5 — Project Timeline
+- [x] 3.6 — Incremental Inputs (support gradual data entry, not all-at-once)
+
+Built on `feature/m2-m3-dashboard-projects` (not merged to main). See SESSION_LOG.md for the full session summary, assumptions, and flagged items.
 
 ## Milestone 4 — Regulation Library
 
