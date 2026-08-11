@@ -54,6 +54,14 @@ export default async function ProjectPage({
         />
         <Field label="Zoning" value={project.zoning ?? "—"} />
       </Card>
+
+      <Card className="max-w-xl">
+        <p className="text-card-title font-medium text-ink">Timeline</p>
+        <div className="flex flex-col gap-2 text-muted-body text-muted-foreground">
+          <p>Created {new Date(project.created_at).toLocaleString()}</p>
+          <p>Last updated {new Date(project.updated_at).toLocaleString()}</p>
+        </div>
+      </Card>
     </div>
   );
 }
