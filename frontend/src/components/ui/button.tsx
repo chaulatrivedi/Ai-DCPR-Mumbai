@@ -9,6 +9,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // DESIGN_BRIEF.md §5 — Primary/Secondary buttons (build now).
+        "brief-primary": "bg-terracotta text-white hover:bg-terracotta-hover",
+        "brief-secondary": "bg-ink text-sand hover:bg-ink/90",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -33,6 +36,18 @@ const buttonVariants = cva(
         "icon-lg": "size-9",
       },
     },
+    compoundVariants: [
+      {
+        variant: "brief-primary",
+        size: "default",
+        class: "h-auto rounded-button px-5 py-2 text-[13px] font-medium",
+      },
+      {
+        variant: "brief-secondary",
+        size: "default",
+        class: "h-auto rounded-button px-4 py-1.5 text-[13px] font-normal",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

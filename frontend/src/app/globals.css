@@ -4,11 +4,52 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* DCPR Design Brief v2.0 — locked color, type, and radius tokens.
+   Referenced by name everywhere; never hardcode these hex values in a
+   component. See docs/DESIGN_BRIEF.md. */
+@theme {
+  --color-sand: #f5f0e8;
+  --color-ink: #1e2820;
+  --color-forest: #2d5a3d;
+  --color-terracotta: #cc6644;
+  --color-terracotta-hover: #b85a3a;
+  --color-teal: #4a7c5f;
+  --color-amber: #f0c040;
+  --color-error: #c0392b;
+  --color-success-bg: #e8f4f0;
+  --color-success-text: #2d5a3d;
+  --color-placeholder-grey: #bcbcbc;
+  --color-ice-blue: #9bb5bf;
+
+  --radius-input: 5px;
+  --radius-button: 6px;
+  --radius-card: 8px;
+  --radius-tag: 4px;
+  --radius-pill: 20px;
+
+  --text-nav-brand: 13px;
+  --text-nav-link: 12px;
+  --text-sidebar-number: 11px;
+  --text-sidebar-label: 13px;
+  --text-section-label: 10px;
+  --text-input: 14px;
+  --text-result-number: 48px;
+  --text-result-unit: 14px;
+  --text-stat-number: 18px;
+  --text-stat-label: 10px;
+  --text-basis-line: 12px;
+  --text-reg-tag: 11px;
+  --text-body: 14px;
+  --text-muted-body: 13px;
+  --text-card-title: 15px;
+  --text-page-heading: 28px;
+  --text-page-subheading: 14px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -48,73 +89,72 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Light theme (default — see DESIGN_BRIEF.md §8, never default to dark).
+   shadcn's generic semantic slots are pointed at the brief's locked palette
+   so every existing shadcn primitive (Button, Input, Card, Label) already
+   renders on-brand without per-component overrides. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: var(--color-sand);
+  --foreground: var(--color-ink);
+  --card: #ffffff;
+  --card-foreground: var(--color-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-terracotta);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-ink);
+  --secondary-foreground: var(--color-sand);
+  --muted: #ece6da;
+  --muted-foreground: #787774;
+  --accent: var(--color-forest);
+  --accent-foreground: #ffffff;
+  --destructive: var(--color-error);
+  --border: #e2ddd5;
+  --input: #e2ddd5;
+  --ring: var(--color-terracotta);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--color-sand);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-forest);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-forest);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e2ddd5;
+  --sidebar-ring: var(--color-terracotta);
 }
 
+/* Dark theme — not specified by DESIGN_BRIEF.md v2.0 (colors/type/spacing
+   are locked for light only; dark mode is scoped there as "toggle may
+   exist, light is default"). Derived from the same locked palette rather
+   than shadcn's generic grays, kept close enough that light/dark read as
+   the same product. Flagged in SESSION_LOG.md for design sign-off. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: var(--color-ink);
+  --foreground: var(--color-sand);
+  --card: #26332a;
+  --card-foreground: var(--color-sand);
+  --popover: #26332a;
+  --popover-foreground: var(--color-sand);
+  --primary: var(--color-terracotta);
+  --primary-foreground: #ffffff;
+  --secondary: #33453a;
+  --secondary-foreground: var(--color-sand);
+  --muted: #33453a;
+  --muted-foreground: #a9b3ac;
+  --accent: var(--color-forest);
+  --accent-foreground: #ffffff;
+  --destructive: #e0685a;
+  --border: rgb(245 240 232 / 12%);
+  --input: rgb(245 240 232 / 12%);
+  --ring: var(--color-terracotta);
+  --sidebar: #171f19;
+  --sidebar-foreground: var(--color-sand);
+  --sidebar-primary: var(--color-forest);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-forest);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(245 240 232 / 12%);
+  --sidebar-ring: var(--color-terracotta);
 }
 
 @layer base {
