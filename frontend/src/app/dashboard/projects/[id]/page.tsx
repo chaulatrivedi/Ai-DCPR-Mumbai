@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getProject } from "@/lib/projects";
+import { IncompleteBadge } from "@/components/ui/incomplete-badge";
+import { getProject, isProjectComplete } from "@/lib/projects";
 import { ActionToast } from "./action-toast";
 import { DeleteProjectButton } from "./delete-project-button";
 
@@ -31,7 +32,10 @@ export default async function ProjectPage({
       <ActionToast />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-page-heading font-semibold text-ink">{project.name}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-page-heading font-semibold text-ink">{project.name}</h1>
+            {!isProjectComplete(project) && <IncompleteBadge />}
+          </div>
           <p className="text-page-subheading text-muted-foreground">
             {project.occupancy_type}
           </p>

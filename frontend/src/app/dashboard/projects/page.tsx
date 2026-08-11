@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { listProjects } from "@/lib/projects";
+import { IncompleteBadge } from "@/components/ui/incomplete-badge";
+import { isProjectComplete, listProjects } from "@/lib/projects";
 
 export default async function ProjectsPage() {
   const projects = await listProjects();
@@ -39,7 +40,10 @@ export default async function ProjectsPage() {
           {projects.map((project) => (
             <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
               <Card className="h-full transition-colors hover:border-terracotta">
-                <CardTitle>{project.name}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>{project.name}</CardTitle>
+                  {!isProjectComplete(project) && <IncompleteBadge />}
+                </div>
                 <p className="text-muted-body text-muted-foreground">
                   {project.occupancy_type} · {project.plot_area} sq.m
                 </p>
