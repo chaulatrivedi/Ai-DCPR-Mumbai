@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Grep",
+      "Glob",
+      "Bash(npm install)",
+      "Bash(npm run:*)",
+      "Bash(npx:*)",
+      "Bash(pip install:*)",
+      "Bash(pytest:*)",
+      "Bash(alembic:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git checkout -b:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(rm:*)",
+      "Read(.env*)",
+      "Write(.env*)",
+      "Edit(.env*)",
+      "Bash(alembic downgrade:*)",
+      "Bash(supabase db reset:*)"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}

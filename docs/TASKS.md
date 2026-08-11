@@ -16,7 +16,7 @@ Each task should be picked one at a time and run through the Daily Workflow desc
 
 **No AI. No calculations. No uploads. Just the skeleton running.**
 
-## Milestone 1 — Authentication
+## Milestone 1 — Authentication — Complete (2026-08-10)
 
 - [x] Login
 - [x] Signup
@@ -24,6 +24,8 @@ Each task should be picked one at a time and run through the Daily Workflow desc
 - [x] Session Management
 - [x] Protected Routes
 - [ ] User Roles *(deferred — see DECISIONS.md "Scope decisions")*
+
+**Verified end-to-end**: login, signup, forgot password, confirm signup, session management, and protected routes all tested working. User Roles intentionally excluded from Milestone 1 scope (see DECISIONS.md).
 
 **Do not add any AI yet.**
 
