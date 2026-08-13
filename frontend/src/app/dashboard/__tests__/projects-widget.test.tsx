@@ -13,6 +13,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     plot_area: 500,
     road_width: 9,
     zoning: "R2",
+    use_mix: null,
     deleted_at: null,
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",

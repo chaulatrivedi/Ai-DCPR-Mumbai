@@ -5,9 +5,21 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/projects",
 }));
 
+vi.mock("@/app/(auth)/actions", () => ({ signOut: vi.fn() }));
+
 import { NavBar } from "@/components/layout/nav-bar";
 
 describe("NavBar", () => {
+  it("renders a Log out action, present regardless of which page NavBar mounts on", () => {
+    // usePathname is mocked above to a non-dashboard-home page — NavBar is
+    // part of the shared DashboardLayout, not a per-page control, so the
+    // Log out action must render here too, not just on /dashboard.
+    render(<NavBar />);
+
+    const logoutButton = screen.getByRole("button", { name: "Log out" });
+    expect(logoutButton.closest("form")).toBeInTheDocument();
+  });
+
   it("links to Home and Projects, and marks the current page active", () => {
     render(<NavBar />);
 

@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
+
 import { InputWithUnit } from "@/components/ui/input-with-unit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectNative } from "@/components/ui/select-native";
 import { OCCUPANCY_TYPES } from "@/lib/occupancy-types";
+import { USE_MIX_OPTIONS } from "@/lib/use-mix";
 import type { Project } from "@/lib/projects";
 
 // Shared by NewProjectForm and EditProjectForm — same field spec
@@ -12,6 +17,13 @@ export function ProjectFormFields({
 }: {
   defaultValues?: Partial<Project>;
 }) {
+  // Tracks the live select value (not just defaultValues) so Use Mix
+  // appears/disappears as the user changes Occupancy Type, not only on
+  // initial render.
+  const [occupancyType, setOccupancyType] = useState(
+    defaultValues?.occupancy_type ?? "",
+  );
+
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -26,6 +38,7 @@ export function ProjectFormFields({
           name="occupancyType"
           required
           defaultValue={defaultValues?.occupancy_type ?? ""}
+          onChange={(e) => setOccupancyType(e.target.value)}
         >
           <option value="" disabled>
             Select occupancy type
@@ -37,6 +50,28 @@ export function ProjectFormFields({
           ))}
         </SelectNative>
       </div>
+
+      {occupancyType === "Mixed-Use" && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium text-ink">Use Mix (optional)</legend>
+          <div className="flex flex-col gap-1.5">
+            {USE_MIX_OPTIONS.map((option) => (
+              <label
+                key={option}
+                className="flex items-center gap-2 text-[14px] text-ink"
+              >
+                <input
+                  type="checkbox"
+                  name="useMix"
+                  value={option}
+                  defaultChecked={defaultValues?.use_mix?.includes(option) ?? false}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="plotArea">Plot Area</Label>

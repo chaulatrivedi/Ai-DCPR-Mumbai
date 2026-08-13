@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const updateProjectMock = vi.fn();
 vi.mock("../../../actions", () => ({
-  updateProject: vi.fn(),
+  updateProject: (...args: unknown[]) => updateProjectMock(...args),
 }));
 
 import { EditProjectForm } from "@/app/dashboard/projects/[id]/edit/edit-project-form";
@@ -16,12 +18,23 @@ const project: Project = {
   plot_area: 750,
   road_width: 9,
   zoning: "R2",
+  use_mix: null,
   deleted_at: null,
   created_at: "2026-08-01T00:00:00Z",
   updated_at: "2026-08-01T00:00:00Z",
 };
 
+const mixedUseProject: Project = {
+  ...project,
+  occupancy_type: "Mixed-Use",
+  use_mix: ["Residential", "Retail"],
+};
+
 describe("EditProjectForm", () => {
+  beforeEach(() => {
+    updateProjectMock.mockClear();
+  });
+
   it("pre-populates every field with the existing project's data", () => {
     render(<EditProjectForm project={project} />);
 
@@ -35,5 +48,36 @@ describe("EditProjectForm", () => {
   it("shows a Save changes button", () => {
     render(<EditProjectForm project={project} />);
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+  });
+
+  it("hides Use Mix for a non-Mixed-Use project", () => {
+    render(<EditProjectForm project={project} />);
+    expect(screen.queryByText("Use Mix (optional)")).not.toBeInTheDocument();
+  });
+
+  it("shows Use Mix pre-checked with the project's existing selections for a Mixed-Use project", () => {
+    render(<EditProjectForm project={mixedUseProject} />);
+
+    expect(screen.getByText("Use Mix (optional)")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Residential" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Retail" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Commercial" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Institutional" })).not.toBeChecked();
+  });
+
+  it("saves an updated set of Use Mix selections", async () => {
+    const user = userEvent.setup();
+    render(<EditProjectForm project={mixedUseProject} />);
+
+    // starts checked with Residential + Retail; uncheck Retail, add Commercial
+    await user.click(screen.getByRole("checkbox", { name: "Retail" }));
+    await user.click(screen.getByRole("checkbox", { name: "Commercial" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(updateProjectMock).toHaveBeenCalled();
+    // updateProject is bound with the project id (updateProject.bind(null, project.id))
+    // before being wired into useActionState, so the mock sees (id, prevState, formData).
+    const formData = updateProjectMock.mock.calls[0][2] as FormData;
+    expect(formData.getAll("useMix")).toEqual(["Residential", "Commercial"]);
   });
 });

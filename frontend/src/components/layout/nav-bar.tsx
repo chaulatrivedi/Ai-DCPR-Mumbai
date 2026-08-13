@@ -1,8 +1,10 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { signOut } from "@/app/(auth)/actions";
 import { NotificationsMenu } from "./notifications-menu";
 
 // DESIGN_BRIEF.md §5 — Navigation bar (build now, reduced link set per the
@@ -47,7 +49,20 @@ export function NavBar() {
           })}
         </nav>
       </div>
-      <NotificationsMenu />
+      <div className="flex items-center gap-2">
+        <NotificationsMenu />
+        {/* Renders in every /dashboard/* page via DashboardLayout, so sign-out
+            is reachable from anywhere in the app, not just Settings. */}
+        <form action={signOut}>
+          <button
+            type="submit"
+            aria-label="Log out"
+            className="flex items-center justify-center rounded-button p-1.5 text-sand hover:bg-white/10"
+          >
+            <LogOut size={16} />
+          </button>
+        </form>
+      </div>
     </header>
   );
 }

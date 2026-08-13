@@ -8,6 +8,7 @@ export type Project = {
   plot_area: number;
   road_width: number | null;
   zoning: string | null;
+  use_mix: string[] | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

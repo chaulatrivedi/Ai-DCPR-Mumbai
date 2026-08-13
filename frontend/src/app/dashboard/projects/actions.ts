@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { isOccupancyType } from "@/lib/occupancy-types";
+import { isUseMixOption } from "@/lib/use-mix";
 import { createClient } from "@/lib/supabase/server";
 
 export type ProjectActionState = { error?: string } | undefined;
@@ -39,6 +40,16 @@ function parseOptionalFields(formData: FormData) {
   return { roadWidth, zoning: zoning || null } as const;
 }
 
+// Use Mix is only meaningful (and only shown) when Occupancy Type is
+// "Mixed-Use"; ignore any submitted selections otherwise, and stay
+// optional even then (Task 3.1 follow-up spec).
+function parseUseMix(formData: FormData, occupancyType: string): string[] | null {
+  if (occupancyType !== "Mixed-Use") return null;
+
+  const values = formData.getAll("useMix").map(String).filter(isUseMixOption);
+  return values.length > 0 ? values : null;
+}
+
 export async function createProject(
   _prevState: ProjectActionState,
   formData: FormData,
@@ -48,6 +59,7 @@ export async function createProject(
 
   const optional = parseOptionalFields(formData);
   if ("error" in optional) return optional;
+  const useMix = parseUseMix(formData, required.occupancyType);
 
   const supabase = await createClient();
   const {
@@ -64,6 +76,7 @@ export async function createProject(
       plot_area: required.plotArea,
       road_width: optional.roadWidth,
       zoning: optional.zoning,
+      use_mix: useMix,
     })
     .select("id")
     .single();
@@ -83,6 +96,7 @@ export async function updateProject(
 
   const optional = parseOptionalFields(formData);
   if ("error" in optional) return optional;
+  const useMix = parseUseMix(formData, required.occupancyType);
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -93,6 +107,7 @@ export async function updateProject(
       plot_area: required.plotArea,
       road_width: optional.roadWidth,
       zoning: optional.zoning,
+      use_mix: useMix,
     })
     .eq("id", id)
     .is("deleted_at", null)
