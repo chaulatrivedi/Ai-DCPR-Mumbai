@@ -75,3 +75,67 @@ Full detail and reasoning for each is in `docs/DECISIONS.md` under "Flagged assu
 - No blockers were hit that required stopping — every task's automated test passed on first or second attempt; nothing needed the "log blocker and move on" fallback.
 
 ---
+
+## Pre-Milestone-4 cleanup (2026-08-13)
+
+Four follow-up items on `feature/m2-m3-dashboard-projects`, before starting Milestone 4.
+
+### 1. Logout
+
+There was no way to sign out except by navigating to Settings — `signOut()` (`app/(auth)/actions.ts`) already existed and was already wired into a button there, just not reachable from anywhere else. Added a second entry point: an icon button (`lucide-react`'s `LogOut`) in `NavBar`, next to the notifications bell. `NavBar` renders once, inside `DashboardLayout`, so it's now present on every `/dashboard/*` route (Home, Projects, Settings, Profile, project detail/edit/new, Trash) without per-page wiring. Left the existing Settings → Account → Sign out button in place; harmless duplication, not worth removing a working, tested control.
+
+**Verified live** (dev server + browser, not just the unit test): logged in with an existing session, navigated to `/dashboard/projects`, clicked the new nav-bar Log out button — network tab showed the POST to `/dashboard/projects` (the server action) followed by a redirect to `/login`; a direct hit on `/dashboard` afterward bounced to `/login?next=%2Fdashboard`, confirming the session was actually gone, not just a client-side route change. Added `nav-bar.test.tsx` coverage that the button renders regardless of which page `NavBar` is mounted on.
+
+### 2. suppressHydrationWarning
+
+**This hadn't actually been added** — grepped the whole frontend tree and the branch's full git history for `suppressHydrationWarning` and found zero matches. The earlier session's dark-mode work never added it to `layout.tsx`'s `<html>` tag despite the inline `THEME_INIT_SCRIPT` (`layout.tsx`) mutating `documentElement.classList` before hydration runs, which is exactly the pattern that produces React's hydration-mismatch warning on `<html>`. Added `suppressHydrationWarning` to the `<html>` tag now.
+
+**Verified live**: toggled Dark Mode on via Settings, hard-reloaded `/dashboard` (the actual repro path — mismatch only shows on a fresh load with the pre-existing localStorage value), read the browser console — no hydration warning, only HMR/dev-tools noise.
+
+### 3. Use Mix multi-select (Task 3.1 follow-up)
+
+Added a "Use Mix" field (Residential/Retail/Commercial/Institutional, multi-select via checkboxes) to `ProjectFormFields`, shown only when Occupancy Type = "Mixed-Use", optional even then. Storage: new `use_mix jsonb` column on `projects` (Alembic migration `ad26efdd1f48`, applied to both `public.projects` and `test.projects` — same two-schema pattern as the original table migration `40914294a4ce`). No DB-level constraint on the array's contents, matching the existing precedent for `occupancy_type` (DECISIONS.md: UI-level restriction only, while the option list is still provisional).
+
+`ProjectFormFields` gained a `"use client"` directive and a small `useState` to track the live Occupancy Type selection (visibility has to react to the field changing, not just the initial value) — it was already only ever rendered inside client components (`NewProjectForm`/`EditProjectForm`), so this doesn't change its position in the server/client boundary.
+
+`createProject`/`updateProject` (`actions.ts`) parse `useMix` only when `occupancyType === "Mixed-Use"`, filtering submitted values against the known option list (`isUseMixOption`) as a defensive boundary check, same as `isOccupancyType` already does.
+
+**Bug caught while writing the new tests**: `new-project-form.test.tsx`'s `vi.mock("../actions", ...)` was resolving to the wrong path (one level short — the test lives in a nested `__tests__/` folder) and had been silently mocking a nonexistent module this whole time. No test before now ever actually drove a real form submission, so it went unnoticed; the real `actions.ts` (which needs a Next.js request context) was one edit away from crashing every test in the file. Fixed the relative path and added a `beforeEach` mock-clear (needed once tests actually assert on individual submissions, since `vi.fn()` calls accumulate across tests in the same file).
+
+Backend: `backend/tests/test_task_3_1_use_mix.py` — column defaults to null, stores/reads back multiple selections. Frontend: `project-form-fields.tsx` conditional-visibility tests, plus `new-project-form.test.tsx`/`edit-project-form.test.tsx` tests that submit the form and assert the actual `FormData` sent to the (mocked) server action contains the checked options — for edit, covers changing an existing project's selections (uncheck one, check another) and saving.
+
+Not verified live in the browser — no way to get a confirmed test session without email access (see below) — but this is the one item of the four the user's ask was about automated-test coverage for specifically, and both the DB layer and the full component→FormData path are covered end-to-end by tests, all passing.
+
+### 4. Branch/merge status
+
+Still **not merged to main, not pushed to remote** (`git merge-base --is-ancestor` confirms `main` is not an ancestor; 20 commits ahead of `main`, plus this session's uncommitted changes on top). Ready to merge once items 1–3 above are reviewed and committed — nothing new in this pass blocks merge on its own — but carrying forward the pre-existing open items already flagged above under "Anything that needs your review before merging" (FastAPI-bypass decision, Exposed Schemas dashboard change, Profile display-name persistence untested against real Auth, M1 auth page restyle). One additional thing surfaced this pass, unrelated to items 1–3: `npx eslint .` currently fails on `dark-mode-toggle.tsx` (`react-hooks/set-state-in-effect` — calling `setState` synchronously inside a bare `useEffect`) — pre-existing from the M2 Dark Mode commit, not touched this session, left as-is since it's out of scope for this cleanup pass but worth a look before merge since it's the one thing currently keeping `npm run lint` from exiting clean.
+
+**Test status**: 41/41 frontend (Vitest), 26/26 backend (pytest) — includes 2 new backend tests and net-new frontend coverage across `nav-bar`, `project-form-fields` (new), `new-project-form`, and `edit-project-form`. `npx tsc --noEmit` clean.
+
+**Not committed** — changes are staged in the working tree only, per instruction to only commit when explicitly asked.
+
+---
+
+## Overnight unattended session (2026-08-14) — Tasks A-D
+
+Session type: unattended, zero mid-session approvals per standing instruction. Settings audit done first (see below); commits happen after each task's tests pass, to this feature branch only. `git push`/`git merge` stay hard-blocked all night regardless of task outcome.
+
+**Pre-flight safety finding**: reviewing `.claude/settings.json` before starting (as instructed) turned up two pre-existing permission leaks that would have let a `git push` or `git merge` slip through with zero prompt tonight, contradicting the explicit "never push, never merge" rule: `.claude/settings.local.json` (root) had `"Bash(git push *)"` directly in its allow list, and `frontend/.claude/settings.local.json` had a blanket `"Bash(git *)"` covering push and merge too. Both were narrowed to the specific safe subcommands (add/commit/status/diff/log/branch), and `git push`/`git merge` were additionally added to an explicit `deny` list in the shared project `settings.json` as a second line of defense. Everything else needed for tonight (pytest, mypy/pyright, pip/npm install, vitest/eslint/tsc via the existing broad `npx:*`, `cd`) was added to the same file's `allow` list.
+
+### Task A — Profile page runtime error — Done
+
+**Root cause**: The crash is Next.js's own generic client-router error, *"An unexpected response was received from the server"* — confirmed from the actual browser-forwarded stack in `frontend/.next/dev/logs/next-development.log` (a dev server left running from the original repro), pointing at `ProfilePage` (`page.tsx:31`) only because that's where React's component-render call originates in the trace. It is **not** a data-shape bug: `user.email ?? ""` and the `typeof ... === "string"` guard on `display_name` are already null-safe and cannot throw.
+
+The real, independently-confirmed bug: `signIn()` (`app/(auth)/actions.ts`) hardcoded `redirect("/dashboard")`, completely ignoring the `?next=` query param that `proxy.ts`'s `updateSession` sets when it bounces an unauthenticated visitor away from a protected route (confirmed live: visiting `/dashboard/profile` logged out landed on `/login?next=%2Fdashboard%2Fprofile` exactly as in the original terminal log, but logging in from there landed on `/dashboard`, not `/dashboard/profile` — `next` was silently dropped). That forces an extra manual navigation (click Profile again from Home) right after a fresh Server-Action-driven redirect completes — precisely the kind of overlapping/rapid-navigation window in which Next.js's App Router is documented to occasionally throw this exact "unexpected response" error while reconciling two in-flight RSC fetches. Removing the extra hop removes the trigger.
+
+**Fix**:
+- `signIn()` now reads `next` from the submitted form data and redirects there instead of unconditionally to `/dashboard`, via a new `safeNextPath()` helper that only honors a same-origin relative path (rejects `next=https://evil.example` and `next=//evil.example` — an open-redirect guard, since this value now flows from a user-controllable query string into a server-side redirect).
+- `LoginForm` takes a `next` prop and threads it into the form as a hidden field so it survives the POST; `LoginPage` reads `next` from `searchParams` (same pattern already used for `error`) and passes it down.
+- `dashboard/profile/page.tsx`'s own `if (!user) redirect("/login")` fallback now includes the same `next` param, for consistency with `proxy.ts`'s equivalent redirect (previously the only inconsistent one — flagged for a follow-up look at whether other dashboard pages have the same bare-redirect gap, not fixed here to stay in scope).
+- Added `app/dashboard/error.tsx` — the app had **no error boundary anywhere** before tonight. Any render-time exception in any `/dashboard/*` page (this class of transient router error included) now shows a "Something went wrong" / "Try again" fallback inside the existing NavBar/Sidebar shell instead of a hard crash. This is defensive-in-depth, not a fix for the specific bug — the `next` fix addresses the actual trigger.
+
+**Verified live** (dev server + browser, real confirmed-via-DB test account, not just the unit tests): logged out → visited `/dashboard/profile` → bounced to `/login?next=%2Fdashboard%2Fprofile` (matches the original report exactly) → logged in → landed directly on a working `/dashboard/profile` in one hop, no crash, no console errors. Also confirmed direct navigation while already authenticated still works, and login with no `next` param still defaults to `/dashboard` (no regression).
+
+**Automated tests**: `app/(auth)/__tests__/actions.test.ts` (new) — `signIn` redirects to the requested `next` path, defaults to `/dashboard` when absent, and rejects both an absolute-URL and a protocol-relative `next` value (open-redirect guard); `app/(auth)/login/__tests__/login-form.test.tsx` (new) — hidden `next` field renders/omits correctly; `app/dashboard/__tests__/error.test.tsx` (new) — boundary renders the error message and its Try again button calls `reset()`.
+
+---

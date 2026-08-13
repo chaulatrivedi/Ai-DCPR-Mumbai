@@ -16,7 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ initialError }: { initialError?: string }) {
+export function LoginForm({
+  initialError,
+  next,
+}: {
+  initialError?: string;
+  next?: string;
+}) {
   const [state, formAction, pending] = useActionState(signIn, undefined);
   const error = state?.error ?? initialError;
 
@@ -30,6 +36,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       </CardHeader>
       <form action={formAction}>
         <CardContent className="flex flex-col gap-4">
+          {next && <input type="hidden" name="next" value={next} />}
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input

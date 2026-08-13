@@ -10,7 +10,7 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) redirect(`/login?next=${encodeURIComponent("/dashboard/profile")}`);
 
   const displayName =
     typeof user.user_metadata?.display_name === "string"

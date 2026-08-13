@@ -11,6 +11,16 @@ async function getOrigin() {
   return (await headers()).get("origin");
 }
 
+// proxy.ts sends unauthenticated users to /login?next=<original path> so they
+// land back where they meant to go, instead of always at /dashboard. Only a
+// same-origin relative path is honored — a bare "/dashboard" fallback (rather
+// than trusting the raw value) blocks an open-redirect via a crafted
+// next=https://evil.example or next=//evil.example.
+function safeNextPath(next: string): string {
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/dashboard";
+}
+
 export async function signUp(
   _prevState: AuthActionState,
   formData: FormData,
@@ -60,6 +70,7 @@ export async function signIn(
 ): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "");
 
   if (!email || !password) {
     return { error: "Email and password are required." };
@@ -75,7 +86,7 @@ export async function signIn(
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  redirect(safeNextPath(next));
 }
 
 export async function signOut() {
