@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { Card, CardTitle } from "@/components/ui/card";
+import { getDisplayName } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./profile-form";
 
@@ -12,10 +13,7 @@ export default async function ProfilePage() {
 
   if (!user) redirect(`/login?next=${encodeURIComponent("/dashboard/profile")}`);
 
-  const displayName =
-    typeof user.user_metadata?.display_name === "string"
-      ? user.user_metadata.display_name
-      : "";
+  const displayName = getDisplayName(user);
 
   return (
     <div className="flex flex-col gap-8">

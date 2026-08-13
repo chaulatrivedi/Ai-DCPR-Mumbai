@@ -138,4 +138,16 @@ The real, independently-confirmed bug: `signIn()` (`app/(auth)/actions.ts`) hard
 
 **Automated tests**: `app/(auth)/__tests__/actions.test.ts` (new) — `signIn` redirects to the requested `next` path, defaults to `/dashboard` when absent, and rejects both an absolute-URL and a protocol-relative `next` value (open-redirect guard); `app/(auth)/login/__tests__/login-form.test.tsx` (new) — hidden `next` field renders/omits correctly; `app/dashboard/__tests__/error.test.tsx` (new) — boundary renders the error message and its Try again button calls `reset()`.
 
+### Task B — "Welcome, [name]" greeting — Done
+
+Same data source as Profile, made literal rather than just "equivalent logic": extracted the `display_name` read out of `user_metadata` into a new shared `src/lib/profile.ts#getDisplayName()`, and switched `profile/page.tsx` to use it too, so there's exactly one place that decides what a user's display name is.
+
+`NavBar` is a Client Component rendered by `dashboard/layout.tsx` (a Server Component, now `async`) — the layout fetches the user once via `createClient()` + `getUser()` (same pattern `dashboard/page.tsx` already uses for its own data) and passes `displayName` down as a prop, rather than having `NavBar` do its own Supabase call. The greeting renders as "Welcome, {displayName}" next to the Logout button, and is simply omitted (not rendered as "Welcome, ") when there's no display name yet.
+
+**"Updates immediately" mechanism**: `updateDisplayName` (`dashboard/profile/actions.ts`) now calls `revalidatePath("/dashboard", "layout")` after a successful save. The greeting is read by the *layout*, not by the page the Server Action runs on, so without this the new name would only ever show up after a hard refresh — confirmed this was necessary by removing it locally and observing the greeting go stale until reload, then re-adding it.
+
+**Verified live** (same confirmed test account, still authenticated in-browser from Task A's testing): changed display name on the Profile page, greeting updated in the NavBar with no manual reload; then reloaded `/dashboard/profile` and the greeting was still correct (persistence — it's a live Supabase read on every request, not client-cached state, so this is structural rather than something that could silently regress).
+
+**Automated tests**: `lib/__tests__/profile.test.ts` (new) — `getDisplayName` reads a valid string, and falls back to `""` for missing/non-string values; `components/layout/__tests__/nav-bar.test.tsx` (extended) — greeting renders with a name, is absent without one; `dashboard/profile/__tests__/actions.test.ts` (new) — `updateDisplayName` revalidates the layout on success and does *not* revalidate on a Supabase error or empty-name validation failure (the "should have refreshed but silently didn't" failure mode is the one worth guarding against here, hence testing both the positive and negative cases explicitly).
+
 ---

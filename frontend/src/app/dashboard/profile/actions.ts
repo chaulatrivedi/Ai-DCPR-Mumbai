@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
 
 export type ProfileActionState = { error?: string; success?: string } | undefined;
@@ -20,6 +22,13 @@ export async function updateDisplayName(
     data: { display_name: displayName },
   });
   if (error) return { error: error.message };
+
+  // NavBar's "Welcome, [name]" greeting (Task B) is read once by the
+  // dashboard layout — this is a server-rendered layout, not a route page,
+  // so a plain re-render on navigation won't refetch it; revalidating the
+  // whole /dashboard subtree's layout is what makes the new name show up
+  // immediately instead of only after a hard refresh.
+  revalidatePath("/dashboard", "layout");
 
   return { success: "Saved." };
 }

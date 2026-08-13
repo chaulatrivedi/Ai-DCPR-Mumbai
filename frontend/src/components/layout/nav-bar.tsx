@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/dashboard/projects", label: "Projects" },
 ];
 
-export function NavBar() {
+export function NavBar({ displayName }: { displayName?: string }) {
   const pathname = usePathname();
 
   return (
@@ -49,7 +49,10 @@ export function NavBar() {
           })}
         </nav>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {displayName && (
+          <span className="text-nav-link text-sand">Welcome, {displayName}</span>
+        )}
         <NotificationsMenu />
         {/* Renders in every /dashboard/* page via DashboardLayout, so sign-out
             is reachable from anywhere in the app, not just Settings. */}

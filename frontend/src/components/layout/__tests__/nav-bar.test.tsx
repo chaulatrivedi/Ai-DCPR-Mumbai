@@ -40,4 +40,14 @@ describe("NavBar", () => {
     expect(screen.queryByText(/Regulation/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Ask AI/i)).not.toBeInTheDocument();
   });
+
+  it("greets the user by display name when one is provided", () => {
+    render(<NavBar displayName="Chaula T." />);
+    expect(screen.getByText("Welcome, Chaula T.")).toBeInTheDocument();
+  });
+
+  it("shows no greeting when there is no display name yet", () => {
+    render(<NavBar />);
+    expect(screen.queryByText(/Welcome,/)).not.toBeInTheDocument();
+  });
 });
