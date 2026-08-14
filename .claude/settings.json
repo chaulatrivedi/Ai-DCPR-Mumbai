@@ -37,7 +37,6 @@
       "Bash(cd:*)"
     ],
     "deny": [
-      "Bash(git push:*)",
       "Bash(git merge:*)"
     ],
     "ask": [
@@ -46,7 +45,8 @@
       "Write(.env*)",
       "Edit(.env*)",
       "Bash(alembic downgrade:*)",
-      "Bash(supabase db reset:*)"
+      "Bash(supabase db reset:*)",
+      "Bash(git push:*)"
     ],
     "defaultMode": "acceptEdits"
   }
