@@ -225,7 +225,7 @@ Read all of `backend/app/` (13 files) end-to-end, plus the frontend files flagge
 | Commit | Summary |
 |---|---|
 | `83f01b7` | Task 0 — Task C's dark-mode `useSyncExternalStore` fix + `docs/LEGACY_PROJECT_FINDINGS.md` (both carried over uncommitted from last session) |
-| *(pending)* | Task D — mypy fix (`config.py` type-ignore), `mypy`/`pytest-cov` added to `backend/requirements.txt`, coverage artifacts gitignored, `@vitest/coverage-v8` added to `frontend/package.json` |
+| `b7090ba` | Task D — mypy fix (`config.py` type-ignore), `mypy`/`pytest-cov` added to `backend/requirements.txt`, coverage artifacts gitignored, `@vitest/coverage-v8` added to `frontend/package.json` |
 
 Everything above is committed to `feature/m2-m3-dashboard-projects`. **Not merged to main, not pushed to remote** — per standing instruction, both wait for your review.
 
