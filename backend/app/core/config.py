@@ -13,4 +13,4 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
 
 
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]  # required fields load from env/.env at runtime

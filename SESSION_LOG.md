@@ -161,3 +161,83 @@ Replaced `useState`+`useEffect` with `useSyncExternalStore` — the React hook b
 **Tests**: no new test file — the existing `dark-mode-toggle.test.tsx` and `theme.test.ts` already cover this component's behavior and both still pass unmodified, which is itself the "no behavior change" confirmation the task asked for.
 
 ---
+
+## Pre-flight — Approvals audit (2026-08-14)
+
+Re-read root `.claude/settings.json`, root `.claude/settings.local.json`, and `frontend/.claude/settings.local.json` before starting anything else, per this session's standing instruction to close any permission leak before running unattended.
+
+**Finding: no leak present.** Root `.claude/settings.json`'s `deny` list already contains `"Bash(git push:*)"` and `"Bash(git merge:*)"` explicitly, and its `allow` list already covers everything Task D needed (`pytest:*`, `mypy:*`, `pyright:*`, `npx vitest:*`, `pip install:*`, `git add/commit/status/diff/log/branch`). The two `settings.local.json` files are accumulated narrow one-off approvals (specific PIDs, specific curl calls) from past sessions — none grant push/merge or anything broader than a single prior command. Made **no changes** to any settings file rather than editing something that was already correct — the "gap fixed last session" this instruction referenced is holding.
+
+(`frontend/node_modules/recast/.claude/settings.local.json` also matched the settings-file glob — that's a third-party npm package's own bundled config, not this project's; left untouched.)
+
+---
+
+## Task D — Retroactive verification pass, Milestones 0–3 (2026-08-14)
+
+### Backend type checking
+
+No type checker was previously configured. Installed `mypy==2.3.0` into `backend/venv` and ran `python -m mypy app --ignore-missing-imports` against all 13 source files under `backend/app/`.
+
+**One error found**: `app/core/config.py:16` — `Missing named argument "database_url" for "Settings"`. This is the well-known mypy/pydantic-settings false positive: `Settings()` is called with no arguments because `BaseSettings` populates required fields from `.env`/env vars at runtime, which mypy's static call-arg check can't see. Fixed directly (obvious, minor): added a scoped `# type: ignore[call-arg]` with an inline comment explaining why, rather than loosening the field's type or making it optional (which would be a real, incorrect type-safety regression). Re-ran — **clean, 0 errors, 13 files checked**.
+
+Added `mypy==2.3.0` and `pytest-cov==7.1.0` to `backend/requirements.txt` so this is reproducible, and added `.coverage` / `htmlcov/` to `backend/.gitignore`.
+
+### Backend coverage
+
+Installed `pytest-cov`, ran `python -m pytest --cov=app --cov-report=term-missing tests/`. **26 tests passed. 36% statement coverage overall (56 stmts, 36 missed)**, broken down:
+
+| File | Coverage |
+|---|---|
+| `core/config.py`, `core/db.py` | 100% / 91% |
+| `api/v1/router.py`, `api/v1/routes/health.py`, `core/logging.py`, `main.py`, `middleware/auth.py` | 0% |
+
+**Architecturally significant, not auto-fixed**: the 0%-covered files are exactly the FastAPI app-layer files (routing, the `/health` endpoint, app startup, auth middleware) — every existing backend test talks to Postgres directly via `sqlalchemy`/`psycopg` (per the Task 0 test-schema strategy above), none of them go through the FastAPI app itself. That strategy was a deliberate, documented tradeoff at the time ("Flagged for review" in Task 0's log entry above), and this coverage report is the concrete evidence of exactly what it costs: the API layer — including whatever `AuthMiddleware` eventually enforces — has zero automated-test coverage. Writing FastAPI `TestClient`-based tests for the app layer is a real (if small) task, not a one-line fix, so it's reported here rather than added unasked.
+
+**Also worth flagging**: `app/middleware/auth.py`'s `AuthMiddleware` is still the placeholder documented in its own docstring — it passes every request through unverified ("Once Supabase Auth is set up ... this should verify the Authorization header's Supabase JWT"). This was already known/tracked (not a surprise this session), but it means today, the FastAPI backend itself enforces no request-level auth — whatever protection exists is at the Supabase/Postgres RLS layer only (which Task 0's tests do genuinely exercise via `SET LOCAL ROLE`/`request.jwt.claims`). Surfacing it again here since Definition of Quality calls out "RLS enforced" specifically, and app-layer auth is a separate, still-open gap.
+
+### Frontend coverage
+
+Installed `@vitest/coverage-v8` as a devDependency, ran `npx vitest run --coverage`. **20 test files, 59 tests, all passed. 62.98% statement / 63.76% branch / 75% function coverage overall.** Weak spots:
+
+- `app/(auth)/actions.ts` — 24.52%. The four Server Actions' Supabase-error branches and the `signOut`/`updatePassword` redirect paths aren't exercised (only the validation-failure and happy paths mentioned in earlier session tests are).
+- `lib/projects.ts` — 6.25%. `listProjects`/`listTrashedProjects`/`getProject` have no direct unit tests; they're presumably exercised transitively through page-level component tests, but not in isolation.
+- `lib/supabase/server.ts` — 0%, `lib/use-mix.ts` / `lib/tenancy-types.ts` — 50%. Thin wrapper/type-helper files; low risk but genuinely untested.
+- `components/ui/incomplete-badge.tsx` — 0%. Static presentational component (renders a fixed span), effectively zero-risk despite the 0%.
+
+Not auto-fixed — deciding what's worth a dedicated unit test (vs. accepted as covered transitively) is a judgment call for whoever owns test strategy here, not a "fix the number" task.
+
+### Definition of Quality — self-review
+
+Read all of `backend/app/` (13 files) end-to-end, plus the frontend files flagged by the coverage gaps above (`actions.ts`, `projects.ts`, `supabase/server.ts`, `incomplete-badge.tsx`). This was a **targeted** review — the files touched by or exposed by this session's type/coverage work — not a re-read of every file across Milestones 0–3.
+
+- **Consistency / single responsibility**: held up. Backend is small and cleanly layered (config / db / middleware / routes); `lib/projects.ts` does one thing per function and lets errors bubble to the Server Action caller rather than swallowing them.
+- **Real error handling**: `auth/actions.ts` is a good example — explicit validation before any Supabase call, Supabase errors surfaced to the form rather than thrown, and two separate deliberate anti-enumeration messages (signup, password reset) with inline comments explaining why the copy has to stay generic.
+- **Security basics**: no secrets in tracked files (`git grep` for service-role-key/`sk_live` patterns — none found; only `backend/.env.example` is tracked, real `.env` files are gitignored). Open-redirect guarded (`safeNextPath` in `auth/actions.ts`). RLS is genuinely exercised in backend tests (see Task 0 above), but see the `AuthMiddleware` gap flagged above — that's the one real security-relevant finding from this pass.
+- **Minor, not fixed**: `lib/supabase/server.ts` uses non-null assertions (`process.env.NEXT_PUBLIC_SUPABASE_URL!`) on two env vars — standard boilerplate matching Supabase's own docs, fails loudly and immediately if unset, so low actual risk; noting it rather than changing an established pattern unasked.
+- **No dead code, no magic values** found in the files read this pass.
+
+---
+
+## End of session (2026-08-14)
+
+### Commits this session
+
+| Commit | Summary |
+|---|---|
+| `83f01b7` | Task 0 — Task C's dark-mode `useSyncExternalStore` fix + `docs/LEGACY_PROJECT_FINDINGS.md` (both carried over uncommitted from last session) |
+| *(pending)* | Task D — mypy fix (`config.py` type-ignore), `mypy`/`pytest-cov` added to `backend/requirements.txt`, coverage artifacts gitignored, `@vitest/coverage-v8` added to `frontend/package.json` |
+
+Everything above is committed to `feature/m2-m3-dashboard-projects`. **Not merged to main, not pushed to remote** — per standing instruction, both wait for your review.
+
+### Definition of Quality — session self-review
+
+Consistency, error handling, and type safety were already strong across the files this session touched or reviewed (see Task D write-up above for specifics). The one finding worth your attention before merge is the `AuthMiddleware` placeholder — not new, not introduced this session, but concretely confirmed by the 0%-coverage report to still be a no-op today.
+
+### Outstanding items for your review before approving merge to main
+
+1. **`AuthMiddleware` is still a no-op** (`backend/app/middleware/auth.py`) — every backend request passes through unverified; only Supabase RLS gates data access today. Tracked in the file's own docstring as pending Task 0.5/Milestone 1 work, not something this session was scoped to fix, but flagging again since Task D's coverage run made the gap concrete.
+2. **FastAPI app-layer has 0% automated-test coverage** (routing, `/health`, `main.py`, the middleware above) — all existing backend tests go around the app via direct DB connections, a tradeoff made explicitly in Task 0 and re-surfaced here with numbers attached.
+3. **Frontend coverage gaps** in `auth/actions.ts` (Supabase-error branches), `lib/projects.ts` (no direct unit tests), and a couple of thin wrapper files — likely fine as-is (some exercised transitively) but worth a decision on whether to close them before M4.
+4. No approval-prompt gaps or mid-session skips to report — the settings audit found the permission set already correct, and no task in this session hit an unplanned destructive operation or unexpected prompt.
+
+No tasks were skipped or silently deferred this session — everything scoped above was completed.
