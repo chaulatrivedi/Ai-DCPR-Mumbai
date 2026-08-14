@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateDisplayNameMock = vi.fn();
 vi.mock("../actions", () => ({
@@ -45,5 +45,33 @@ describe("ProfileForm", () => {
 
     expect(await screen.findByText("Saved.")).toBeInTheDocument();
     expect(updateDisplayNameMock).toHaveBeenCalled();
+  });
+
+  describe("re-rendering with a changed displayName prop", () => {
+    // Reproduces the post-save flow: updateDisplayName revalidates the
+    // /dashboard layout, so this already-mounted form receives a new
+    // displayName prop without unmounting. Base UI's Field.Control warns
+    // via console.error if an uncontrolled field's defaultValue changes
+    // after first render.
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      errorSpy.mockRestore();
+    });
+
+    it("updates the field value and does not warn about an uncontrolled FieldControl", () => {
+      const { rerender } = render(
+        <ProfileForm email="chaula@example.com" displayName="Chaula" />,
+      );
+
+      rerender(<ProfileForm email="chaula@example.com" displayName="Chaula T." />);
+
+      expect(screen.getByLabelText("Display name")).toHaveValue("Chaula T.");
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
   });
 });
