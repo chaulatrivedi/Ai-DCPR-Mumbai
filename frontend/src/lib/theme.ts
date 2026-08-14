@@ -20,6 +20,17 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
+// Listeners for useSyncExternalStore (dark-mode-toggle.tsx) — localStorage's
+// own "storage" event only fires in *other* tabs, never the one that made
+// the change, so callers that write via setStoredTheme need their own way
+// to tell a subscribed component to re-read the new value.
+const listeners = new Set<() => void>();
+
+export function subscribeToTheme(onChange: () => void): () => void {
+  listeners.add(onChange);
+  return () => listeners.delete(onChange);
+}
+
 export function setStoredTheme(theme: Theme): void {
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
@@ -28,4 +39,5 @@ export function setStoredTheme(theme: Theme): void {
     // won't persist across reloads; still applies for this session.
   }
   applyTheme(theme);
+  listeners.forEach((onChange) => onChange());
 }

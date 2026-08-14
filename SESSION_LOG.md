@@ -150,4 +150,14 @@ Same data source as Profile, made literal rather than just "equivalent logic": e
 
 **Automated tests**: `lib/__tests__/profile.test.ts` (new) — `getDisplayName` reads a valid string, and falls back to `""` for missing/non-string values; `components/layout/__tests__/nav-bar.test.tsx` (extended) — greeting renders with a name, is absent without one; `dashboard/profile/__tests__/actions.test.ts` (new) — `updateDisplayName` revalidates the layout on success and does *not* revalidate on a Supabase error or empty-name validation failure (the "should have refreshed but silently didn't" failure mode is the one worth guarding against here, hence testing both the positive and negative cases explicitly).
 
+### Task C — ESLint failure on dark-mode-toggle.tsx — Done
+
+The lint rule (`react-hooks/set-state-in-effect`) was correctly flagging the original pattern — `useEffect(() => setTheme(getStoredTheme()), [])` — but the naive fix (drop the effect, read `getStoredTheme()` directly as `useState`'s initial value) would have reintroduced exactly the bug that effect was working around: `getStoredTheme()` reads `localStorage`, which doesn't exist during SSR, so a lazy initializer would make the client's *first* render (during hydration) diverge from what the server rendered for a dark-mode user, triggering a genuine, unsuppressed hydration-mismatch warning on this button's text — a new bug, not a fix.
+
+Replaced `useState`+`useEffect` with `useSyncExternalStore` — the React hook built specifically for "external, SSR-unsafe data source" (its `getServerSnapshot` argument returns `"light"`, matching the server render exactly, no mismatch; its `getSnapshot` reads the real client value). `setStoredTheme` (`lib/theme.ts`) now also notifies a small listener set after writing, since the native `storage` event only fires in *other* tabs — needed so the same component that calls `setStoredTheme` finds out its own write happened and re-renders.
+
+**Verified**: `npx eslint .` exits clean (previously the one failure). Confirmed live — toggling dark mode still applies/removes the `dark` class and flips the button label correctly in both directions, no new console errors or warnings.
+
+**Tests**: no new test file — the existing `dark-mode-toggle.test.tsx` and `theme.test.ts` already cover this component's behavior and both still pass unmodified, which is itself the "no behavior change" confirmation the task asked for.
+
 ---

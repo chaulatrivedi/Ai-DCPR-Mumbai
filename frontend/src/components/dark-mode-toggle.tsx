@@ -1,24 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
-import { getStoredTheme, setStoredTheme, type Theme } from "@/lib/theme";
+import { getStoredTheme, setStoredTheme, subscribeToTheme, type Theme } from "@/lib/theme";
+
+// Matches the server-rendered default (layout.tsx never has access to
+// localStorage during SSR) so hydration's first client render doesn't
+// mismatch; useSyncExternalStore then re-reads the real value itself
+// without the extra render-then-setState an effect would need.
+function getServerTheme(): Theme {
+  return "light";
+}
 
 export function DarkModeToggle() {
-  const [theme, setTheme] = useState<Theme>("light");
-
-  // Reads the already-applied class (set synchronously by the inline
-  // script in layout.tsx before hydration) rather than assuming light,
-  // so the label doesn't flip immediately after mount for dark-mode users.
-  useEffect(() => {
-    setTheme(getStoredTheme());
-  }, []);
+  const theme = useSyncExternalStore(subscribeToTheme, getStoredTheme, getServerTheme);
 
   function toggle() {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setStoredTheme(next);
-    setTheme(next);
+    setStoredTheme(theme === "dark" ? "light" : "dark");
   }
 
   return (
